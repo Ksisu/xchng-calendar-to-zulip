@@ -1,5 +1,5 @@
 from exchangelib import Credentials, Account, EWSDateTime
-import os, datetime, zulip
+import os, datetime, zulip, crython
 
 user = os.environ['XCHNG_USER']
 password = os.environ['XCHNG_PASS']
@@ -7,6 +7,8 @@ calendar = os.environ['XCHNG_CALENDAR']
 
 stream = os.environ['ZULIP_STREAM']
 topic = os.environ['ZULIP_TOPIC']
+
+schedule = os.getenv('SCHEDULE')
 
 
 # ZULIP_SITE - zulip client
@@ -46,7 +48,15 @@ def send_to_zulip(msg):
     client.send_message(request)
 
 
-if __name__ == "__main__":
+@crython.job(expr=schedule)
+def process():
     items = list_today_items()
     msg = convert_to_message(items)
     send_to_zulip(msg)
+
+if __name__ == "__main__":
+    if schedule is None:
+        process()
+    else:
+        crython.start()
+        crython.join()

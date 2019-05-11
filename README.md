@@ -15,5 +15,8 @@ docker run \
   -e ZULIP_API_KEY=secret \
   -e ZULIP_STREAM=Off \
   -e ZULIP_TOPIC=Off \
+  -e SCHEDULE='@daily' \
   ksisu/xchng-calendar-to-zulip
 ```
+
+`SCHEDULE` is an optional setting to schedule with [crython](https://github.com/ahawker/crython) expression.
