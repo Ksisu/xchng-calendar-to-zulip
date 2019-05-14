@@ -43,14 +43,15 @@ def convert_to_message(items):
 
 
 def send_to_zulip(msg):
-    request = {
-        "type": "stream",
-        "to": stream,
-        "subject": topic,
-        "content": msg
-    }
-    client = zulip.Client()
-    client.send_message(request)
+    if msg:
+        request = {
+            "type": "stream",
+            "to": stream,
+            "subject": topic,
+            "content": msg
+        }
+        client = zulip.Client()
+        client.send_message(request)
 
 
 @crython.job(expr=schedule)
