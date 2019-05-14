@@ -1,19 +1,24 @@
-from exchangelib import Credentials, Account, EWSDateTime
+from exchangelib import Credentials, Account, EWSDateTime, EWSTimeZone, UTC
 import os, datetime, zulip, crython
 
 user = os.environ['XCHNG_USER']
 password = os.environ['XCHNG_PASS']
 calendar = os.environ['XCHNG_CALENDAR']
+timezone = os.environ['XCHNG_TIMEZONE']
 
 stream = os.environ['ZULIP_STREAM']
 topic = os.environ['ZULIP_TOPIC']
 
 schedule = os.getenv('SCHEDULE')
 
-
 # ZULIP_SITE - zulip client
 # ZULIP_EMAIL - zulip client
 # ZULIP_API_KEY - zulip client
+
+if timezone is None:
+    timezone = UTC
+else:
+    timezone = EWSTimeZone.timezone(timezone)
 
 
 def list_today_items():
@@ -26,8 +31,8 @@ def list_today_items():
     year, mount, day = now.year, now.month, now.day
 
     items = calendar_folder.all().filter(
-        end__gt=account.default_timezone.localize(EWSDateTime(year, mount, day)),
-        start__lt=account.default_timezone.localize(EWSDateTime(year, mount, day + 1))
+        end__gt=timezone.localize(EWSDateTime(year, mount, day)),
+        start__lt=timezone.localize(EWSDateTime(year, mount, day + 1))
     ).order_by('subject')
 
     return list(map(lambda i: i.subject, items))
@@ -53,6 +58,7 @@ def process():
     items = list_today_items()
     msg = convert_to_message(items)
     send_to_zulip(msg)
+
 
 if __name__ == "__main__":
     if schedule is None:

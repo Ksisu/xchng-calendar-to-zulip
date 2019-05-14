@@ -10,6 +10,7 @@ docker run \
   -e XCHNG_USER=off@example.com \
   -e XCHNG_PASS=secret \
   -e XCHNG_CALENDAR=Off \
+  -e XCHNG_TIMEZONE='Europe/Budapest' \
   -e ZULIP_SITE=https://zulip.example.com \
   -e ZULIP_EMAIL=off-bot@zulip.example.com \
   -e ZULIP_API_KEY=secret \
@@ -20,3 +21,5 @@ docker run \
 ```
 
 `SCHEDULE` is an optional setting to schedule with [crython](https://github.com/ahawker/crython) expression.
+
+`XCHNG_TIMEZONE` is optional setting (default: `UTC`)
