@@ -4,7 +4,7 @@ import os, datetime, zulip, crython
 user = os.environ['XCHNG_USER']
 password = os.environ['XCHNG_PASS']
 calendar = os.environ['XCHNG_CALENDAR']
-timezone = os.environ['XCHNG_TIMEZONE']
+timezone = os.getenv('XCHNG_TIMEZONE')
 
 stream = os.environ['ZULIP_STREAM']
 topic = os.environ['ZULIP_TOPIC']
@@ -30,9 +30,9 @@ def list_today_items():
     now = datetime.datetime.now()
     year, mount, day = now.year, now.month, now.day
 
-    items = calendar_folder.all().filter(
-        end__gt=timezone.localize(EWSDateTime(year, mount, day)),
-        start__lt=timezone.localize(EWSDateTime(year, mount, day + 1))
+    items = calendar_folder.view(
+        start=timezone.localize(EWSDateTime(year, mount, day, 0, 0, 1)),
+        end=timezone.localize(EWSDateTime(year, mount, day, 23, 59, 59))
     ).order_by('subject')
 
     return list(map(lambda i: i.subject, items))
