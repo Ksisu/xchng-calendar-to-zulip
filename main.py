@@ -1,64 +1,16 @@
-from exchangelib import Credentials, Account, EWSDateTime, EWSTimeZone, UTC
-import os, datetime, zulip, crython
-
-user = os.environ['XCHNG_USER']
-password = os.environ['XCHNG_PASS']
-calendar = os.environ['XCHNG_CALENDAR']
-timezone = os.getenv('XCHNG_TIMEZONE')
-
-stream = os.environ['ZULIP_STREAM']
-topic = os.environ['ZULIP_TOPIC']
+import os, crython
+from xchng_calendar import list_today_events
+from zulip_mustache import send
+from event_converter import create_template_data, template
 
 schedule = os.getenv('SCHEDULE')
-
-# ZULIP_SITE - zulip client
-# ZULIP_EMAIL - zulip client
-# ZULIP_API_KEY - zulip client
-
-if timezone is None:
-    timezone = UTC
-else:
-    timezone = EWSTimeZone.timezone(timezone)
-
-
-def list_today_items():
-    credentials = Credentials(user, password)
-    account = Account(user, credentials=credentials, autodiscover=True)
-
-    calendar_folder = account.public_folders_root / calendar
-
-    now = datetime.datetime.now()
-    year, mount, day = now.year, now.month, now.day
-
-    items = calendar_folder.view(
-        start=timezone.localize(EWSDateTime(year, mount, day, 0, 0, 1)),
-        end=timezone.localize(EWSDateTime(year, mount, day, 23, 59, 59))
-    ).order_by('subject')
-
-    return list(map(lambda i: i.subject, items))
-
-
-def convert_to_message(items):
-    return '\n'.join(list(map(lambda i: ' * ' + i, items)))
-
-
-def send_to_zulip(msg):
-    if msg:
-        request = {
-            "type": "stream",
-            "to": stream,
-            "subject": topic,
-            "content": msg
-        }
-        client = zulip.Client()
-        client.send_message(request)
 
 
 @crython.job(expr=schedule)
 def process():
-    items = list_today_items()
-    msg = convert_to_message(items)
-    send_to_zulip(msg)
+    events = list_today_events()
+    data = create_template_data(events)
+    send(template, data)
 
 
 if __name__ == "__main__":
